@@ -1,0 +1,394 @@
+# Project specific
+.github/copilot-instructions.md
+
+# =============================================================================
+# Go
+# =============================================================================
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.out
+coverage.html
+
+# Go workspace file
+go.work
+
+# Dependency directories
+vendor/
+
+# Go build cache
+.cache/
+
+# Go module cache
+go.sum.backup
+
+
+# =============================================================================
+# Vue / Node.js / Frontend
+# =============================================================================
+
+# Dependencies
+node_modules/
+jspm_packages/
+
+# Production build
+web/dist/
+web/dist-ssr/
+
+# Local env files
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Vue / Vite
+.vite/
+.DS_Store
+
+# =============================================================================
+# Database
+# =============================================================================
+
+# MariaDB / MySQL
+*.sql.gz
+*.sql.backup
+*.mwb.bak
+
+# Database dumps
+/dumps/
+*.dump
+
+# SQLite (if used for testing)
+*.db
+*.sqlite
+*.sqlite3
+
+# =============================================================================
+# Certificates and Keys
+# =============================================================================
+
+# TLS/SSL certificates and keys
+*.pem
+*.key
+*.crt
+*.csr
+*.cer
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Keep example certificates for development
+!certs/example.*
+!config/certs/example.*
+
+# Certificate directories (except examples)
+/certs/*
+!/certs/README.md
+!/certs/.gitkeep
+!/certs/example/
+
+# =============================================================================
+# Configuration
+# =============================================================================
+
+# Local configuration files (keep examples)
+config/*.json
+config/*.yaml
+config/*.yml
+!config/*.example.json
+!config/*.example.yaml
+!config/*.example.yml
+!config/README.md
+
+# Environment-specific configs
+*.local.json
+*.dev.json
+*.prod.json
+
+# Secrets
+secrets/
+*.secret
+
+# =============================================================================
+# Logs
+# =============================================================================
+
+# Log files and directories
+logs/
+*.log
+log/
+*.log.*
+
+# Keep log directories
+!logs/.gitkeep
+!log/.gitkeep
+
+# =============================================================================
+# OS specific
+# =============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =============================================================================
+# IDE and Editors
+# =============================================================================
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains IDEs (GoLand, WebStorm, etc.)
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.idea_modules/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+tags
+[._]*.un~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# =============================================================================
+# Testing
+# =============================================================================
+
+# Test coverage
+coverage/
+*.cover
+.coverage
+.coverage.*
+htmlcov/
+*.coverprofile
+
+# Test results
+test-results/
+*.test.log
+
+# Benchmark results
+*.bench
+
+# =============================================================================
+# Development
+# =============================================================================
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+*.swp
+*.swo
+*~.nib
+
+# Debug files
+debug/
+*.dSYM/
+*.pdb
+
+# Profiling
+*.prof
+*.pprof
+cpu.prof
+mem.prof
+profile.out
+
+# Air (Go live reload)
+.air.toml
+tmp/
+
+# =============================================================================
+# Docker
+# =============================================================================
+
+# Docker override files
+docker-compose.override.yml
+docker-compose.*.override.yml
+
+# Docker volumes
+.docker/
+
+# =============================================================================
+# Documentation
+# =============================================================================
+
+# Generated documentation
+/docs/api/generated/
+/docs/_build/
+/docs/.doctrees/
+
+# Keep documentation structure
+!docs/README.md
+
+# =============================================================================
+# Scripts
+# =============================================================================
+
+# Generated scripts
+*.generated.sh
+*.generated.bash
+
+# Local scripts (keep examples)
+scripts/local.*
+!scripts/local.example.*
+
+# =============================================================================
+# Deployment
+# =============================================================================
+
+# Kubernetes secrets
+k8s/*secret*.yaml
+k8s/*configmap*.yaml
+!k8s/*secret*.example.yaml
+!k8s/*configmap*.example.yaml
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+
+# Ansible
+*.retry
+.vault_pass
+
+# =============================================================================
+# Monitoring and Metrics
+# =============================================================================
+
+# Prometheus data
+prometheus_data/
+
+# Grafana data
+grafana_data/
+
+# =============================================================================
+# Backup files
+# =============================================================================
+
+*.backup
+*.old
+*.orig
+*.bak~
+
+# =============================================================================
+# Project specific
+# =============================================================================
+
+# Development certificates
+/dev-certs/
+
+# Local agent configurations
+/agent-configs/
+
+# Test network namespaces
+/test-netns/
+
+# Migration scripts outputs
+/migrations/applied/
+
+# IP pool state (if stored locally)
+/data/ippool.state
+
+# Session data
+/data/sessions/
+
+# Audit logs (if stored locally, should be in logs/)
+/data/audit/
