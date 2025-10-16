@@ -1,0 +1,38 @@
+{
+    "listen": ":8228",
+    "database": {
+        "type": "mariadb",
+        "host": "localhost",
+        "port": 3306,
+        "user": "root",
+        "password": "your_password_here",
+        "database": "easy_any_link",
+        "charset": "utf8mb4",
+        "max_open_conns": 100,
+        "max_idle_conns": 10,
+        "conn_max_lifetime": "1h"
+    },
+    "log": {
+        "level": "info",
+        "file": "./logs/server.log",
+        "format": "json"
+    },
+    "tls": {
+        "cert_file": "./certs/server.crt",
+        "key_file": "./certs/server.key",
+        "ca_file": "./certs/ca.crt",
+        "min_version": "TLS1.3"
+    },
+    "network": {
+        "overlay_cidr": "10.200.0.0/16",
+        "gateway_ip": "10.200.0.1",
+        "mtu": 1400,
+        "keepalive_interval": 30,
+        "keepalive_timeout": 90
+    },
+    "security": {
+        "session_timeout": 1440,
+        "max_failed_auth": 5,
+        "require_client_certs": true
+    }
+}

@@ -1,0 +1,161 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "github.com/taills/EasyAnyLink/common/proto";
+
+import "google/protobuf/timestamp.proto";
+
+// AgentService defines the gRPC service for agent-server communication
+service AgentService {
+    // Register an agent with the server
+    rpc Register(RegisterRequest) returns (RegisterResponse);
+    
+    // Maintain heartbeat to keep the connection alive
+    rpc Heartbeat(stream HeartbeatRequest) returns (stream HeartbeatResponse);
+    
+    // Relay data packets between agents
+    rpc RelayData(stream DataPacket) returns (stream DataPacket);
+    
+    // Get routing configuration for client agents
+    rpc GetRoutes(RouteRequest) returns (RouteResponse);
+    
+    // Update agent status
+    rpc UpdateStatus(StatusUpdate) returns (StatusResponse);
+}
+
+// RegisterRequest is sent by agents during initial connection
+message RegisterRequest {
+    string agent_id = 1;             // UUID of the agent
+    string user_key = 2;             // User API key for authentication
+    AgentType type = 3;              // Client or Gateway
+    string protocol_version = 4;     // Protocol version (e.g., "1.0.0")
+    string certificate_fingerprint = 5; // SHA256 fingerprint of client cert
+    AgentMetadata metadata = 6;      // Additional agent information
+    int32 bandwidth = 7;             // Bandwidth in KB/s, 0 for unlimited
+}
+
+// AgentType defines the role of the agent
+enum AgentType {
+    AGENT_TYPE_UNSPECIFIED = 0;
+    CLIENT = 1;
+    GATEWAY = 2;
+}
+
+// AgentMetadata contains platform and version information
+message AgentMetadata {
+    string os = 1;                   // Operating system (linux, darwin, windows)
+    string arch = 2;                 // Architecture (amd64, arm64)
+    string version = 3;              // Agent version
+    string hostname = 4;             // Hostname of the machine
+    map<string, string> labels = 5;  // Custom labels for filtering/grouping
+}
+
+// RegisterResponse is returned after successful registration
+message RegisterResponse {
+    bool accepted = 1;               // Whether registration was accepted
+    string session_id = 2;           // Unique session identifier
+    string assigned_ip = 3;          // Assigned overlay IP address
+    string server_version = 4;       // Server protocol version
+    string minimum_supported_version = 5; // Minimum compatible version
+    string error_message = 6;        // Error description if not accepted
+    ServerConfig server_config = 7;  // Server configuration parameters
+}
+
+// ServerConfig contains server-side configuration
+message ServerConfig {
+    string gateway_ip = 1;           // Server's overlay IP (usually .0.1)
+    int32 mtu = 2;                   // Maximum transmission unit
+    int32 keepalive_interval = 3;    // Heartbeat interval in seconds
+    int32 keepalive_timeout = 4;     // Connection timeout in seconds
+}
+
+// HeartbeatRequest is sent periodically to maintain connection
+message HeartbeatRequest {
+    string session_id = 1;           // Session identifier
+    google.protobuf.Timestamp timestamp = 2; // Current timestamp
+    AgentStats stats = 3;            // Agent statistics
+}
+
+// AgentStats contains performance and traffic metrics
+message AgentStats {
+    uint64 bytes_sent = 1;           // Total bytes sent
+    uint64 bytes_received = 2;       // Total bytes received
+    uint64 packets_sent = 3;         // Total packets sent
+    uint64 packets_received = 4;     // Total packets received
+    uint32 errors = 5;               // Error count
+    uint32 drops = 6;                // Dropped packet count
+    float cpu_usage = 7;             // CPU usage percentage
+    uint64 memory_usage = 8;         // Memory usage in bytes
+}
+
+// HeartbeatResponse acknowledges heartbeat
+message HeartbeatResponse {
+    bool alive = 1;                  // Server is alive
+    google.protobuf.Timestamp timestamp = 2; // Server timestamp
+    bool should_refresh_routes = 3;  // Client should re-fetch routes
+    string message = 4;              // Optional message from server
+}
+
+// DataPacket represents an IP packet being relayed
+message DataPacket {
+    string session_id = 1;           // Session identifier
+    string source_agent_id = 2;      // Source agent UUID
+    string destination_agent_id = 3; // Destination agent UUID (empty for gateway)
+    bytes payload = 4;               // IP packet data
+    uint32 sequence = 5;             // Sequence number for ordering
+    google.protobuf.Timestamp timestamp = 6; // Packet timestamp
+}
+
+// RouteRequest asks for routing configuration
+message RouteRequest {
+    string session_id = 1;           // Session identifier
+    string agent_id = 2;             // Agent UUID
+}
+
+// RouteResponse provides routing rules
+message RouteResponse {
+    repeated RoutingRule rules = 1;  // List of routing rules
+    string default_gateway_id = 2;   // Default gateway agent ID
+}
+
+// RoutingRule defines a routing policy
+message RoutingRule {
+    int32 rule_id = 1;               // Rule identifier
+    RouteAction action = 2;          // Action to take
+    string destination = 3;          // Destination CIDR
+    string gateway_id = 4;           // Gateway agent ID (for forward action)
+    int32 priority = 5;              // Rule priority (lower = higher priority)
+    bool enabled = 6;                // Whether rule is active
+}
+
+// RouteAction defines what to do with matching packets
+enum RouteAction {
+    ROUTE_ACTION_UNSPECIFIED = 0;
+    FORWARD = 1;                     // Forward through gateway
+    DIRECT = 2;                      // Send directly (local routing)
+    DENY = 3;                        // Drop the packet
+}
+
+// StatusUpdate allows agents to report status changes
+message StatusUpdate {
+    string session_id = 1;           // Session identifier
+    string agent_id = 2;             // Agent UUID
+    AgentStatus status = 3;          // New status
+    string message = 4;              // Optional status message
+}
+
+// AgentStatus represents the operational state
+enum AgentStatus {
+    AGENT_STATUS_UNSPECIFIED = 0;
+    ONLINE = 1;
+    OFFLINE = 2;
+    ERROR = 3;
+    MAINTENANCE = 4;
+}
+
+// StatusResponse acknowledges status update
+message StatusResponse {
+    bool acknowledged = 1;           // Update was received
+    string message = 2;              // Optional response message
+}
