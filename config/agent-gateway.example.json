@@ -2,15 +2,12 @@
     "mode": "gateway",
     "server": "your-server.example.com:8228",
     "id": "gateway-uuid-here",
+    "user_key": "your-user-api-key-here",
     "bandwidth": 1000,
+    "insecure_skip_verify": true,
     "log": {
         "level": "info",
         "file": "./logs/agent-gateway.log",
         "format": "json"
-    },
-    "tls": {
-        "cert_file": "./certs/gateway.crt",
-        "key_file": "./certs/gateway.key",
-        "ca_file": "./certs/ca.crt"
     }
 }

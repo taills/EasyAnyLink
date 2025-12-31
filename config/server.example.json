@@ -1,7 +1,9 @@
 {
     "listen": ":8228",
+    "cert_file": "./certs/server.crt",
+    "key_file": "./certs/server.key",
     "database": {
-        "type": "mariadb",
+        "type": "mysql",
         "host": "localhost",
         "port": 3306,
         "user": "root",
@@ -10,18 +12,12 @@
         "charset": "utf8mb4",
         "max_open_conns": 100,
         "max_idle_conns": 10,
-        "conn_max_lifetime": "1h"
+        "conn_max_lifetime": 3600
     },
     "log": {
         "level": "info",
         "file": "./logs/server.log",
         "format": "json"
-    },
-    "tls": {
-        "cert_file": "./certs/server.crt",
-        "key_file": "./certs/server.key",
-        "ca_file": "./certs/ca.crt",
-        "min_version": "TLS1.3"
     },
     "network": {
         "overlay_cidr": "10.200.0.0/16",
@@ -32,7 +28,6 @@
     },
     "security": {
         "session_timeout": 1440,
-        "max_failed_auth": 5,
-        "require_client_certs": true
+        "max_failed_auth": 5
     }
 }

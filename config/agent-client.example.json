@@ -3,15 +3,11 @@
     "server": "your-server.example.com:8228",
     "user_key": "your-user-api-key-here",
     "bandwidth": 0,
+    "insecure_skip_verify": true,
     "log": {
         "level": "info",
         "file": "./logs/agent-client.log",
         "format": "json"
-    },
-    "tls": {
-        "cert_file": "./certs/client.crt",
-        "key_file": "./certs/client.key",
-        "ca_file": "./certs/ca.crt"
     },
     "rules": [
         {
