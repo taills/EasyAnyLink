@@ -136,7 +136,7 @@ func (a *Agent) Stop() error {
 	return nil
 }
 
-// connect establishes gRPC connection to server
+// connect establishes gRPC connection to server using QUIC
 func (a *Agent) connect() error {
 	// Extract server address and hostname
 	host, _, err := net.SplitHostPort(a.config.Server)
@@ -144,23 +144,25 @@ func (a *Agent) connect() error {
 		return fmt.Errorf("invalid server address: %w", err)
 	}
 
-	// Load TLS credentials
-	tlsConfig := crypto.TLSConfig{
-		CertFile:   a.config.TLS.CertFile,
-		KeyFile:    a.config.TLS.KeyFile,
-		CAFile:     a.config.TLS.CAFile,
-		MinVersion: crypto.GetTLSVersion("TLS1.3"),
-	}
-
-	creds, err := crypto.LoadClientTLSCredentials(tlsConfig, host)
+	// Load TLS configuration for QUIC (one-way TLS)
+	tlsConfig, err := crypto.LoadClientTLSConfig(host, a.config.InsecureSkipVerify)
 	if err != nil {
-		return fmt.Errorf("failed to load TLS credentials: %w", err)
+		return fmt.Errorf("failed to load TLS configuration: %w", err)
 	}
 
-	// Create gRPC connection
+	// Warn if certificate verification is disabled
+	if a.config.InsecureSkipVerify {
+		log.Println("WARNING: TLS certificate verification is disabled. This should only be used for debugging!")
+	}
+
+	// Create QUIC dialer
+	dialer := crypto.NewQUICDialer(tlsConfig)
+
+	// Create gRPC connection with QUIC transport
 	conn, err := grpc.Dial(
 		a.config.Server,
-		grpc.WithTransportCredentials(creds),
+		crypto.GRPCDialOption(dialer),
+		grpc.WithInsecure(), // TLS is handled by QUIC layer
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{
 			Time:                30 * time.Second,
 			Timeout:             10 * time.Second,
@@ -174,18 +176,14 @@ func (a *Agent) connect() error {
 	a.conn = conn
 	a.client = proto.NewAgentServiceClient(conn)
 
-	log.Printf("Connected to server at %s", a.config.Server)
+	log.Printf("Connected to server at %s using QUIC transport", a.config.Server)
 	return nil
 }
 
 // register registers the agent with the server
 func (a *Agent) register() error {
-	// Get certificate fingerprint
-	fingerprint, err := crypto.GetCertificateFingerprint(a.config.TLS.CertFile)
-	if err != nil {
-		log.Printf("Warning: failed to get certificate fingerprint: %v", err)
-		fingerprint = ""
-	}
+	// Note: Certificate fingerprint is not needed for one-way TLS
+	// Server authenticates agent using user_key instead
 
 	// Determine agent type
 	var agentType proto.AgentType
@@ -197,12 +195,11 @@ func (a *Agent) register() error {
 
 	// Create registration request
 	req := &proto.RegisterRequest{
-		AgentId:                a.agentID,
-		UserKey:                a.config.UserKey,
-		Type:                   agentType,
-		ProtocolVersion:        "1.0.0",
-		CertificateFingerprint: fingerprint,
-		Bandwidth:              int32(a.config.Bandwidth),
+		AgentId:         a.agentID,
+		UserKey:         a.config.UserKey,
+		Type:            agentType,
+		ProtocolVersion: "1.0.0",
+		Bandwidth:       int32(a.config.Bandwidth),
 		Metadata: &proto.AgentMetadata{
 			Os:       "darwin", // TODO: detect actual OS
 			Arch:     "amd64",  // TODO: detect actual arch

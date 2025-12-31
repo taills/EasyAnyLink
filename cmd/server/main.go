@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -58,32 +57,30 @@ func main() {
 	defer db.Close()
 	log.Println("Database connected successfully")
 
-	// Validate TLS certificates
-	if err := crypto.ValidateCertificate(cfg.TLS.CertFile); err != nil {
+	// Validate TLS certificate
+	if err := crypto.ValidateCertificate(cfg.CertFile); err != nil {
 		log.Printf("Warning: Certificate validation: %v", err)
 	}
 
-	if err := crypto.VerifyCertificateChain(cfg.TLS.CertFile, cfg.TLS.CAFile); err != nil {
-		log.Printf("Warning: Certificate chain verification: %v", err)
-	}
+	log.Println("Using one-way TLS with QUIC transport")
+	log.Println("Agents will verify server certificate using system root CAs")
 
-	// Load TLS credentials
-	tlsConfig := crypto.TLSConfig{
-		CertFile:   cfg.TLS.CertFile,
-		KeyFile:    cfg.TLS.KeyFile,
-		CAFile:     cfg.TLS.CAFile,
-		MinVersion: crypto.GetTLSVersion(cfg.TLS.MinVersion),
-	}
-
-	creds, err := crypto.LoadServerTLSCredentials(tlsConfig)
+	// Load TLS configuration for QUIC
+	tlsConfig, err := crypto.LoadServerTLSConfig(cfg.CertFile, cfg.KeyFile)
 	if err != nil {
-		log.Fatalf("Failed to load TLS credentials: %v", err)
+		log.Fatalf("Failed to load TLS configuration: %v", err)
 	}
-	log.Println("TLS/mTLS configured successfully")
+
+	// Create QUIC listener
+	quicListener, err := crypto.NewQUICListener(cfg.Listen, tlsConfig)
+	if err != nil {
+		log.Fatalf("Failed to create QUIC listener: %v", err)
+	}
+	defer quicListener.Close()
+	log.Printf("QUIC listener started on %s", cfg.Listen)
 
 	// Create gRPC server
 	grpcServer := grpc.NewServer(
-		grpc.Creds(creds),
 		grpc.MaxConcurrentStreams(10000),
 	)
 
@@ -98,12 +95,6 @@ func main() {
 	// Register reflection for grpcurl
 	reflection.Register(grpcServer)
 
-	// Start listening
-	listener, err := net.Listen("tcp", cfg.Listen)
-	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-	}
-
 	// Handle graceful shutdown
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
@@ -115,10 +106,10 @@ func main() {
 	}()
 
 	// Start server
-	log.Printf("Server listening on %s", cfg.Listen)
+	log.Printf("Server listening on %s with QUIC transport", cfg.Listen)
 	log.Println("Press Ctrl+C to stop")
 
-	if err := grpcServer.Serve(listener); err != nil {
+	if err := grpcServer.Serve(quicListener); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}
 

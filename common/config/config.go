@@ -12,7 +12,8 @@ type ServerConfig struct {
 	Listen   string         `json:"listen"`
 	Database DatabaseConfig `json:"database"`
 	Log      LogConfig      `json:"log"`
-	TLS      TLSConfig      `json:"tls"`
+	CertFile string         `json:"cert_file"` // Server TLS certificate (e.g., Let's Encrypt)
+	KeyFile  string         `json:"key_file"`  // Server TLS private key
 	Network  NetworkConfig  `json:"network"`
 	Security SecurityConfig `json:"security"`
 }
@@ -38,7 +39,7 @@ type LogConfig struct {
 	Format string `json:"format"` // json or text
 }
 
-// TLSConfig represents TLS/mTLS configuration
+// TLSConfig represents TLS/mTLS configuration (kept for backward compatibility)
 type TLSConfig struct {
 	CertFile   string `json:"cert_file"`
 	KeyFile    string `json:"key_file"`
@@ -57,21 +58,20 @@ type NetworkConfig struct {
 
 // SecurityConfig represents security-related settings
 type SecurityConfig struct {
-	SessionTimeout     int  `json:"session_timeout"`      // minutes
-	MaxFailedAuth      int  `json:"max_failed_auth"`      // max failed auth attempts
-	RequireClientCerts bool `json:"require_client_certs"` // enforce mTLS
+	SessionTimeout int `json:"session_timeout"` // minutes
+	MaxFailedAuth  int `json:"max_failed_auth"` // max failed auth attempts
 }
 
 // AgentConfig represents the agent configuration
 type AgentConfig struct {
-	Mode      string        `json:"mode"` // "client" or "gateway"
-	Server    string        `json:"server"`
-	UserKey   string        `json:"user_key"`
-	AgentID   string        `json:"id"`
-	Bandwidth int           `json:"bandwidth"` // KB/s, 0 for unlimited
-	Log       LogConfig     `json:"log"`
-	TLS       TLSConfig     `json:"tls"`
-	Rules     []RoutingRule `json:"rules,omitempty"` // Only for client mode
+	Mode               string        `json:"mode"` // "client" or "gateway"
+	Server             string        `json:"server"`
+	UserKey            string        `json:"user_key"`
+	AgentID            string        `json:"id"`
+	Bandwidth          int           `json:"bandwidth"`            // KB/s, 0 for unlimited
+	InsecureSkipVerify bool          `json:"insecure_skip_verify"` // Skip TLS certificate verification (for debugging only)
+	Log                LogConfig     `json:"log"`
+	Rules              []RoutingRule `json:"rules,omitempty"` // Only for client mode
 }
 
 // RoutingRule represents a routing policy
@@ -112,9 +112,6 @@ func LoadServerConfig(path string) (*ServerConfig, error) {
 	}
 	if config.Log.Format == "" {
 		config.Log.Format = "json"
-	}
-	if config.TLS.MinVersion == "" {
-		config.TLS.MinVersion = "TLS1.3"
 	}
 
 	return &config, nil
@@ -168,8 +165,9 @@ func (c *ServerConfig) Validate() error {
 	if c.Database.Host == "" {
 		return fmt.Errorf("database host is required")
 	}
-	if c.TLS.CertFile == "" || c.TLS.KeyFile == "" {
-		return fmt.Errorf("TLS certificate and key are required")
+	// Validate TLS configuration
+	if c.CertFile == "" || c.KeyFile == "" {
+		return fmt.Errorf("cert_file and key_file are required")
 	}
 	if c.Network.OverlayCIDR == "" {
 		return fmt.Errorf("overlay CIDR is required")
@@ -185,8 +183,9 @@ func (c *AgentConfig) Validate() error {
 	if c.Server == "" {
 		return fmt.Errorf("server address is required")
 	}
-	if c.TLS.CAFile == "" {
-		return fmt.Errorf("CA certificate is required for TLS verification")
+	// Validate agent type
+	if c.Mode != "client" && c.Mode != "gateway" {
+		return fmt.Errorf("mode must be 'client' or 'gateway'")
 	}
 	return nil
 }
